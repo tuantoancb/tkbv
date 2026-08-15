@@ -1,14 +1,21 @@
-# TKB Giáo viên - Vercel
+# TKB Giáo viên
 
-## Deploy
-1. Upload toàn bộ thư mục này lên GitHub (không upload file ZIP).
-2. Import repository vào Vercel.
-3. Framework Preset: Other.
-4. Build Command: để trống.
-5. Output Directory: để trống.
-6. Deploy.
+App lọc thời khóa biểu theo tên giáo viên và giữ đúng bố cục:
 
-Google Sheets cần chia sẻ ở chế độ:
-Anyone with the link / Bất kỳ ai có đường liên kết đều có thể xem.
+Thứ/ngày | Buổi | TIẾT | 10A1 ... 12A5
 
-App đọc sheet theo gid trong URL và chỉ giữ các ô khớp đúng tên giáo viên.
+Chỉ các ô của giáo viên được nhập mới hiển thị nội dung.
+Các ô khác để trống.
+
+## Deploy Vercel
+1. Giải nén ZIP.
+2. Upload TẤT CẢ file bên trong lên root GitHub repository.
+3. Import repository vào Vercel.
+4. Framework Preset: Other.
+5. Build Command: để trống.
+6. Output Directory: để trống.
+7. Deploy.
+
+## Quyền Google Sheets
+Sheet phải bật:
+Bất kỳ ai có đường liên kết đều có thể xem / Anyone with the link can view.
