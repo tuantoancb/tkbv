@@ -26,7 +26,7 @@
     button:disabled{opacity:.6;cursor:wait}
     .primary{background:#2563eb;color:#fff}.secondary{background:#e5e7eb;color:#111827}
     .status{text-align:center;color:#475569;min-height:22px;margin:5px 0 9px}
-    .result-title{text-align:center;font-size:20px;font-weight:800;margin:8px 0 10px}
+    .result-title{text-align:center;font-size:22px;font-weight:700;margin:10px 0 12px;letter-spacing:.2px}
     .table-box{background:#fff;overflow:auto;border:1px solid #4b5563}
     table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px}
     th,td{
@@ -51,77 +51,43 @@
       .page{padding:8px}
     }
     @media print{
-      @page{margin:8mm}
+      @page{margin:7mm}
       html,body{
-        margin:0!important;
-        padding:0!important;
-        background:#fff!important;
-        -webkit-print-color-adjust:exact;
-        print-color-adjust:exact;
+        margin:0!important;padding:0!important;background:#fff!important;
+        -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
       }
       .controls,.options,.status,.hint,h1{display:none!important}
-      .page{
-        max-width:none!important;
-        width:100%!important;
-        margin:0!important;
-        padding:0!important;
-      }
+      .page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}
       #printArea{
-        display:block!important;
-        width:max-content!important;
-        max-width:none!important;
-        transform-origin:top left!important;
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
+        display:block!important;width:max-content!important;max-width:none!important;
+        transform-origin:top left!important;page-break-inside:avoid!important;break-inside:avoid!important;
       }
       .result-title{
         font-family:'Times New Roman',Times,serif!important;
-        font-size:15px!important;
-        font-weight:700!important;
-        margin:0 0 6px!important;
-        text-align:center!important;
+        font-size:var(--print-title,16px)!important;font-weight:700!important;
+        margin:0 0 6px!important;text-align:center!important;
       }
-      .table-box{
-        border:0!important;
-        overflow:visible!important;
-        width:max-content!important;
-        max-width:none!important;
-      }
+      .table-box{border:0!important;overflow:visible!important;width:max-content!important;max-width:none!important}
       table{
-        width:auto!important;
-        min-width:0!important;
-        table-layout:fixed!important;
+        width:auto!important;min-width:0!important;table-layout:fixed!important;
         font-family:'Times New Roman',Times,serif!important;
         font-size:var(--print-font,9px)!important;
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
+        page-break-inside:avoid!important;break-inside:avoid!important;
       }
       th,td{
-        height:var(--print-row-h,25px)!important;
-        min-height:var(--print-row-h,25px)!important;
-        padding:1px 3px!important;
-        line-height:1.05!important;
-        border:1px solid #666!important;
+        height:var(--print-row-h,25px)!important;min-height:var(--print-row-h,25px)!important;
+        padding:1px 3px!important;line-height:1.05!important;border:1px solid #666!important;
       }
       thead th{
-        height:var(--print-head-h,34px)!important;
-        font-weight:700!important;
+        height:var(--print-head-h,34px)!important;font-weight:700!important;
         background:#f1f1f1!important;
       }
-      .day-h{width:44px!important}
-      .session-h{width:56px!important}
-      .period-h{width:40px!important}
-      .class-h{width:86px!important}
-      .teacher-cell{
-        font-weight:700!important;
-        white-space:normal!important;
-        overflow:visible!important;
-        text-overflow:clip!important;
-      }
-      tr,td,th{
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
-      }
+      .day-h{width:44px!important}.session-h{width:56px!important}.period-h{width:40px!important}
+      .class-h{width:var(--print-class-w,86px)!important}
+      .teacher-cell{font-weight:600!important;white-space:nowrap!important;overflow:visible!important}
+      .day{background:#fff900!important}.morning{background:#65d72e!important}
+      .afternoon{background:#fff0ae!important}.evening{background:#aaa!important}
+      tr,td,th{page-break-inside:avoid!important;break-inside:avoid!important}
     }
   </style>
 </head>
@@ -141,7 +107,7 @@
       </select>
     </div>
     <button class="primary" id="viewBtn">Xem thời khóa biểu</button>
-    <button class="secondary" onclick="printOnePage()">In 1 trang / Lưu PDF</button>
+    <button class="secondary" onclick="printOnePage()">In thời khóa biểu</button>
   </div>
 
   <div class="options">
@@ -156,6 +122,14 @@
     <label class="check">
       <input type="checkbox" id="showSunday" checked>
       Hiện Chủ nhật
+    </label>
+    <label class="check">
+      Kiểu in
+      <select id="printMode" style="width:auto;height:32px;padding:0 8px">
+        <option value="auto">Tự động</option>
+        <option value="portrait">Dọc</option>
+        <option value="landscape">Ngang</option>
+      </select>
     </label>
     <span style="font-size:12px;color:#64748b">
       Các cột lớp không có tiết của giáo viên sẽ tự động được ẩn.
@@ -388,78 +362,60 @@ function esc(v){
 
 function printOnePage(){
   if(!lastData){
-    $('status').textContent = 'Hãy xem thời khóa biểu trước khi in.';
+    $('status').textContent='Hãy xem thời khóa biểu trước khi in.';
     return;
   }
 
-  // Dùng đúng các tùy chọn đang bật/tắt.
   render(lastData);
+  const area=document.getElementById('printArea');
+  const table=area.querySelector('table');
+  if(!table) return;
 
-  const area = document.getElementById('printArea');
-  const table = area.querySelector('table');
-  if(!table){
-    $('status').textContent = 'Không có thời khóa biểu để in.';
-    return;
-  }
+  const mode=$('printMode') ? $('printMode').value : 'auto';
+  const rows=table.querySelectorAll('tbody tr').length;
+  const cols=table.querySelectorAll('thead th').length;
 
-  // Reset lần in trước.
-  area.style.zoom = '';
-  document.documentElement.style.removeProperty('--print-row-h');
-  document.documentElement.style.removeProperty('--print-head-h');
-  document.documentElement.style.removeProperty('--print-font');
+  area.style.zoom='';
+  ['--print-row-h','--print-head-h','--print-font','--print-class-w','--print-title']
+    .forEach(x=>document.documentElement.style.removeProperty(x));
 
-  const bodyRows = table.querySelectorAll('tbody tr').length;
-  const visibleCols = table.querySelectorAll('thead th').length;
+  // Tự động chọn vùng trang hợp lý theo số cột.
+  let landscape = mode==='landscape' || (mode==='auto' && cols>=10);
+  if(mode==='portrait') landscape=false;
 
-  /*
-    Mục tiêu: thẩm mỹ giống PDF mẫu.
-    - Ít dòng: dãn hàng vừa phải.
-    - Nhiều dòng: thu hàng dần, nhưng không ép quá mỏng ngay từ đầu.
-    - Ít cột: cho cột lớp rộng hơn.
-  */
-  let rowH;
-  if(bodyRows <= 36) rowH = 28;
-  else if(bodyRows <= 44) rowH = 24;
-  else if(bodyRows <= 52) rowH = 20;
-  else rowH = 17;
+  // Kích thước vùng in quy ước. Không khóa cứng @page để Chrome vẫn cho đổi giấy.
+  const targetW=landscape ? 1040 : 750;
+  const targetH=landscape ? 720 : 1040;
 
-  let fontSize;
-  if(visibleCols <= 7) fontSize = 9.2;
-  else if(visibleCols <= 10) fontSize = 8.4;
-  else fontSize = 7.6;
+  // Tỷ lệ thẩm mỹ giống bản mẫu: hàng thoáng, chữ rõ.
+  let rowH = rows<=34 ? 28 : rows<=42 ? 24 : rows<=50 ? 20 : 17;
+  let font = cols<=8 ? 9.4 : cols<=11 ? 8.7 : 8.0;
+  let classW = cols<=8 ? 105 : cols<=11 ? 88 : 76;
+  let title = cols<=9 ? 17 : 15;
 
-  const headH = Math.max(30, rowH + 8);
+  document.documentElement.style.setProperty('--print-row-h',rowH+'px');
+  document.documentElement.style.setProperty('--print-head-h',Math.max(31,rowH+7)+'px');
+  document.documentElement.style.setProperty('--print-font',font+'px');
+  document.documentElement.style.setProperty('--print-class-w',classW+'px');
+  document.documentElement.style.setProperty('--print-title',title+'px');
 
-  document.documentElement.style.setProperty('--print-row-h', rowH + 'px');
-  document.documentElement.style.setProperty('--print-head-h', headH + 'px');
-  document.documentElement.style.setProperty('--print-font', fontSize + 'px');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const contentW=Math.max(area.scrollWidth,table.scrollWidth);
+    const contentH=area.scrollHeight;
+    let scale=Math.min(targetW/contentW,targetH/contentH,1);
 
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    // Khung 1 trang bảo thủ, nhưng KHÔNG ép loại giấy hay chiều giấy.
-    // Trình duyệt vẫn cho người dùng chọn A4/A3/Portrait/Landscape.
-    const targetW = 760;
-    const targetH = 1010;
+    // Nếu chỉ hơi tràn, co vừa đủ. Nếu bảng lớn, vẫn đảm bảo một trang.
+    scale=Math.max(.32,scale);
+    area.style.zoom=String(scale);
 
-    const contentW = Math.max(area.scrollWidth, table.scrollWidth);
-    const contentH = area.scrollHeight;
-
-    let scale = Math.min(targetW / contentW, targetH / contentH, 1);
-
-    // Chỉ thu nhỏ phần cần thiết để giữ 1 trang.
-    // Ưu tiên giữ chữ/hàng lớn hơn so với bản cũ.
-    scale = Math.max(0.34, scale);
-    area.style.zoom = String(scale);
-
-    const cleanup = () => {
-      area.style.zoom = '';
-      document.documentElement.style.removeProperty('--print-row-h');
-      document.documentElement.style.removeProperty('--print-head-h');
-      document.documentElement.style.removeProperty('--print-font');
-      window.removeEventListener('afterprint', cleanup);
+    const cleanup=()=>{
+      area.style.zoom='';
+      ['--print-row-h','--print-head-h','--print-font','--print-class-w','--print-title']
+        .forEach(x=>document.documentElement.style.removeProperty(x));
+      window.removeEventListener('afterprint',cleanup);
     };
-
-    window.addEventListener('afterprint', cleanup);
-    setTimeout(() => window.print(), 100);
+    window.addEventListener('afterprint',cleanup);
+    setTimeout(()=>window.print(),100);
   }));
 }
 

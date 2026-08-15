@@ -75,3 +75,13 @@ Bất kỳ ai có đường liên kết đều có thể xem.
 - Ô nhập tên được đổi thành danh sách chọn.
 - Ví dụ hiển thị: `T. Tuấn`, `Long`, ... theo chính dữ liệu của bảng.
 - Khi Google Sheet thay đổi danh sách giáo viên, app đọc lại danh sách từ link Sheet.
+
+
+## V11 - Bản in premium
+- Bố cục in theo mockup đã duyệt.
+- Times New Roman, tiêu đề cân giữa, bảng viền mảnh.
+- Giữ màu ngày/Sáng/Chiều/Tối.
+- Tự co vừa một trang theo nội dung.
+- Có lựa chọn Kiểu in: Tự động / Dọc / Ngang.
+- Tự động ưu tiên Dọc khi ít cột, Ngang khi nhiều cột.
+- Giữ toàn bộ tính năng danh sách giáo viên, ẩn cột trống, Chiều/Tối/Chủ nhật.
