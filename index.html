@@ -51,11 +51,21 @@
       .page{padding:8px}
     }
     @media print{
-      @page{size:A4 portrait;margin:4mm}
-      html,body{width:100%;height:100%;margin:0!important;padding:0!important;background:#fff!important}
-      body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      @page{margin:8mm}
+      html,body{
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
       .controls,.options,.status,.hint,h1{display:none!important}
-      .page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}
+      .page{
+        max-width:none!important;
+        width:100%!important;
+        margin:0!important;
+        padding:0!important;
+      }
       #printArea{
         display:block!important;
         width:max-content!important;
@@ -63,6 +73,13 @@
         transform-origin:top left!important;
         page-break-inside:avoid!important;
         break-inside:avoid!important;
+      }
+      .result-title{
+        font-family:'Times New Roman',Times,serif!important;
+        font-size:15px!important;
+        font-weight:700!important;
+        margin:0 0 6px!important;
+        text-align:center!important;
       }
       .table-box{
         border:0!important;
@@ -74,23 +91,37 @@
         width:auto!important;
         min-width:0!important;
         table-layout:fixed!important;
-        font-size:var(--print-font,6.4px)!important;
+        font-family:'Times New Roman',Times,serif!important;
+        font-size:var(--print-font,9px)!important;
         page-break-inside:avoid!important;
         break-inside:avoid!important;
       }
       th,td{
-        height:var(--print-row-h,18px)!important;
-        min-height:var(--print-row-h,18px)!important;
-        padding:1px 2px!important;
-        line-height:1.0!important;
+        height:var(--print-row-h,25px)!important;
+        min-height:var(--print-row-h,25px)!important;
+        padding:1px 3px!important;
+        line-height:1.05!important;
+        border:1px solid #666!important;
       }
-      thead th{height:var(--print-head-h,24px)!important}
-      .day-h{width:34px!important}
-      .session-h{width:44px!important}
-      .period-h{width:30px!important}
-      .class-h{width:48px!important}
-      .result-title{font-size:13px!important;margin:0 0 3px!important}
-      tr,td,th{page-break-inside:avoid!important;break-inside:avoid!important}
+      thead th{
+        height:var(--print-head-h,34px)!important;
+        font-weight:700!important;
+        background:#f1f1f1!important;
+      }
+      .day-h{width:44px!important}
+      .session-h{width:56px!important}
+      .period-h{width:40px!important}
+      .class-h{width:86px!important}
+      .teacher-cell{
+        font-weight:700!important;
+        white-space:normal!important;
+        overflow:visible!important;
+        text-overflow:clip!important;
+      }
+      tr,td,th{
+        page-break-inside:avoid!important;
+        break-inside:avoid!important;
+      }
     }
   </style>
 </head>
@@ -108,7 +139,7 @@
       <input type="text" id="teacher" placeholder="Ví dụ: T.Tuấn hoặc Long">
     </div>
     <button class="primary" id="viewBtn">Xem thời khóa biểu</button>
-    <button class="secondary" onclick="printOnePage()">In A4 dọc / Lưu PDF</button>
+    <button class="secondary" onclick="printOnePage()">In 1 trang / Lưu PDF</button>
   </div>
 
   <div class="options">
@@ -310,6 +341,7 @@ function printOnePage(){
     return;
   }
 
+  // Dùng đúng các tùy chọn đang bật/tắt.
   render(lastData);
 
   const area = document.getElementById('printArea');
@@ -319,62 +351,65 @@ function printOnePage(){
     return;
   }
 
-  // Reset mọi thông số từ lần in trước.
+  // Reset lần in trước.
   area.style.zoom = '';
-  area.style.transform = '';
-  area.style.width = '';
   document.documentElement.style.removeProperty('--print-row-h');
   document.documentElement.style.removeProperty('--print-head-h');
   document.documentElement.style.removeProperty('--print-font');
 
-  // A4 dọc ở 96dpi khoảng 794 x 1123 px.
-  // Chừa vùng an toàn cho lề và header/footer của trình duyệt.
-  const targetW = 720;
-  const targetH = 990;
-
   const bodyRows = table.querySelectorAll('tbody tr').length;
+  const visibleCols = table.querySelectorAll('thead th').length;
 
-  // Co/dãn CHIỀU CAO dòng theo số hàng thực tế.
-  // Càng nhiều hàng thì mỗi hàng càng thấp; ít hàng thì được dãn ra đẹp hơn.
-  const titleReserve = 26;
-  const headReserve = 26;
-  const usableForRows = targetH - titleReserve - headReserve - 18;
-  let rowH = usableForRows / Math.max(bodyRows, 1);
-  rowH = Math.max(9.5, Math.min(19, rowH));
+  /*
+    Mục tiêu: thẩm mỹ giống PDF mẫu.
+    - Ít dòng: dãn hàng vừa phải.
+    - Nhiều dòng: thu hàng dần, nhưng không ép quá mỏng ngay từ đầu.
+    - Ít cột: cho cột lớp rộng hơn.
+  */
+  let rowH;
+  if(bodyRows <= 36) rowH = 28;
+  else if(bodyRows <= 44) rowH = 24;
+  else if(bodyRows <= 52) rowH = 20;
+  else rowH = 17;
 
-  const headH = Math.max(22, Math.min(28, rowH + 6));
-  let fontSize = Math.max(5.2, Math.min(7.2, rowH * 0.34));
+  let fontSize;
+  if(visibleCols <= 7) fontSize = 9.2;
+  else if(visibleCols <= 10) fontSize = 8.4;
+  else fontSize = 7.6;
+
+  const headH = Math.max(30, rowH + 8);
 
   document.documentElement.style.setProperty('--print-row-h', rowH + 'px');
   document.documentElement.style.setProperty('--print-head-h', headH + 'px');
   document.documentElement.style.setProperty('--print-font', fontSize + 'px');
 
-  // Đợi trình duyệt áp CSS mới rồi mới đo.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const contentW = Math.max(area.scrollWidth, table.scrollWidth);
-      const contentH = area.scrollHeight;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    // Khung 1 trang bảo thủ, nhưng KHÔNG ép loại giấy hay chiều giấy.
+    // Trình duyệt vẫn cho người dùng chọn A4/A3/Portrait/Landscape.
+    const targetW = 760;
+    const targetH = 1010;
 
-      // Scale phần còn thiếu sau khi đã co/dãn row.
-      // Không đặt min-scale để tránh trường hợp bị văng sang trang 2.
-      let scale = Math.min(targetW / contentW, targetH / contentH, 1);
-      scale = Math.max(0.26, scale);
-      area.style.zoom = String(scale);
+    const contentW = Math.max(area.scrollWidth, table.scrollWidth);
+    const contentH = area.scrollHeight;
 
-      const cleanup = () => {
-        area.style.zoom = '';
-        area.style.transform = '';
-        area.style.width = '';
-        document.documentElement.style.removeProperty('--print-row-h');
-        document.documentElement.style.removeProperty('--print-head-h');
-        document.documentElement.style.removeProperty('--print-font');
-        window.removeEventListener('afterprint', cleanup);
-      };
+    let scale = Math.min(targetW / contentW, targetH / contentH, 1);
 
-      window.addEventListener('afterprint', cleanup);
-      setTimeout(() => window.print(), 100);
-    });
-  });
+    // Chỉ thu nhỏ phần cần thiết để giữ 1 trang.
+    // Ưu tiên giữ chữ/hàng lớn hơn so với bản cũ.
+    scale = Math.max(0.34, scale);
+    area.style.zoom = String(scale);
+
+    const cleanup = () => {
+      area.style.zoom = '';
+      document.documentElement.style.removeProperty('--print-row-h');
+      document.documentElement.style.removeProperty('--print-head-h');
+      document.documentElement.style.removeProperty('--print-font');
+      window.removeEventListener('afterprint', cleanup);
+    };
+
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(() => window.print(), 100);
+  }));
 }
 
 </script>

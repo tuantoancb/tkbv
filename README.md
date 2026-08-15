@@ -51,3 +51,11 @@ Bất kỳ ai có đường liên kết đều có thể xem.
 
 ## V7
 - Toàn bộ giao diện và bản in dùng font Times New Roman.
+
+
+## V8 - In 1 trang theo nội dung, không ép A4 dọc
+- Bỏ ép khổ A4 Portrait.
+- Không ép chiều giấy; người dùng có thể chọn khổ/chiều trong hộp thoại in.
+- App tự co vừa toàn bộ phần thời khóa biểu đang hiển thị vào 1 trang.
+- Ưu tiên thẩm mỹ: chiều cao dòng, cỡ chữ và độ rộng cột được chọn theo số dòng/cột trước khi scale.
+- Giữ font Times New Roman và màu nền giống bảng/PDF mẫu.
