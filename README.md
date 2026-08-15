@@ -26,3 +26,9 @@ Bất kỳ ai có đường liên kết đều có thể xem.
 - Khổ in: A4 ngang, lề 4 mm.
 - Tự ẩn toàn bộ phần nhập liệu và tùy chọn khi in.
 - Nên chọn Scale = Default/100% trong hộp thoại in vì app đã tự scale.
+
+
+## V4
+- In A4 theo chiều dọc (Portrait).
+- Nội dung ô hiển thị dạng một dòng: `Toán - T. Tuấn`.
+- Vẫn tự thu nhỏ để ưu tiên nằm trên 1 trang.
