@@ -6,7 +6,7 @@
   <title>Thời khóa biểu giáo viên</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#f5f6f8;font-family:'Times New Roman',Times,serif;color:#111827}
+    body{margin:0;background:#f5f6f8;font-family:Arial,Helvetica,sans-serif;color:#111827}
     .page{max-width:1800px;margin:auto;padding:16px}
     h1{text-align:center;font-size:24px;margin:4px 0 14px}
     .controls{
@@ -28,19 +28,26 @@
     .status{text-align:center;color:#475569;min-height:22px;margin:5px 0 9px}
     .result-title{text-align:center;font-size:20px;font-weight:800;margin:8px 0 10px}
     .table-box{background:#fff;overflow:auto;border:1px solid #4b5563}
-    table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px}
+    table{
+      border-collapse:collapse;
+      width:max-content;
+      min-width:0;
+      table-layout:auto;
+      font-size:12px
+    }
     th,td{
       border:1px solid #777;text-align:center;vertical-align:middle;
-      padding:2px 3px;height:37px;white-space:pre-line;line-height:1.08
+      padding:3px 6px;height:37px;line-height:1.08
     }
-    thead th{background:#f3f4f6;font-weight:800;height:48px}
-    .day-h{width:42px}.session-h{width:54px}.period-h{width:38px}.class-h{width:82px}
-    .day{background:#fff900;font-weight:800;font-size:13px}
+    thead th{background:#f3f4f6;font-weight:800;height:48px;white-space:nowrap}
+    .day-h{width:42px}.session-h{width:54px}.period-h{width:38px}
+    .class-h{width:auto;min-width:58px;white-space:nowrap}
+    .day{background:#fff900;font-weight:800;font-size:13px;white-space:pre-line}
     .morning{background:#08e91d;font-weight:800}
     .afternoon{background:#fff0ae;font-weight:800}
     .evening{background:#a9a9a9;font-weight:800}
-    .teacher-cell{font-weight:700;white-space:nowrap;line-height:1.0;overflow:hidden;text-overflow:clip}
-    .blank{color:transparent}
+    .teacher-cell{font-weight:700;white-space:nowrap;width:auto}
+    .blank{color:transparent;min-width:58px}
     .hint{font-size:12px;color:#64748b;text-align:center;margin-top:7px}
     .empty-message{
       background:#fff;border:1px solid #d1d5db;border-radius:10px;
@@ -51,77 +58,13 @@
       .page{padding:8px}
     }
     @media print{
-      @page{margin:8mm}
-      html,body{
-        margin:0!important;
-        padding:0!important;
-        background:#fff!important;
-        -webkit-print-color-adjust:exact;
-        print-color-adjust:exact;
-      }
+      body{background:#fff}
       .controls,.options,.status,.hint,h1{display:none!important}
-      .page{
-        max-width:none!important;
-        width:100%!important;
-        margin:0!important;
-        padding:0!important;
-      }
-      #printArea{
-        display:block!important;
-        width:max-content!important;
-        max-width:none!important;
-        transform-origin:top left!important;
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
-      }
-      .result-title{
-        font-family:'Times New Roman',Times,serif!important;
-        font-size:15px!important;
-        font-weight:700!important;
-        margin:0 0 6px!important;
-        text-align:center!important;
-      }
-      .table-box{
-        border:0!important;
-        overflow:visible!important;
-        width:max-content!important;
-        max-width:none!important;
-      }
-      table{
-        width:auto!important;
-        min-width:0!important;
-        table-layout:fixed!important;
-        font-family:'Times New Roman',Times,serif!important;
-        font-size:var(--print-font,9px)!important;
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
-      }
-      th,td{
-        height:var(--print-row-h,25px)!important;
-        min-height:var(--print-row-h,25px)!important;
-        padding:1px 3px!important;
-        line-height:1.05!important;
-        border:1px solid #666!important;
-      }
-      thead th{
-        height:var(--print-head-h,34px)!important;
-        font-weight:700!important;
-        background:#f1f1f1!important;
-      }
-      .day-h{width:44px!important}
-      .session-h{width:56px!important}
-      .period-h{width:40px!important}
-      .class-h{width:86px!important}
-      .teacher-cell{
-        font-weight:700!important;
-        white-space:normal!important;
-        overflow:visible!important;
-        text-overflow:clip!important;
-      }
-      tr,td,th{
-        page-break-inside:avoid!important;
-        break-inside:avoid!important;
-      }
+      .page{max-width:none;padding:0}
+      .table-box{border:0;overflow:visible}
+      table{font-size:8.5px}
+      th,td{height:27px;padding:1px 3px}
+      .result-title{font-size:14px;margin:2px 0 5px}
     }
   </style>
 </head>
@@ -136,10 +79,10 @@
     </div>
     <div>
       <label>Tên giáo viên</label>
-      <input type="text" id="teacher" placeholder="Ví dụ: T.Tuấn hoặc Long">
+      <input type="text" id="teacher" placeholder="Ví dụ: T.Tuấn hoặc T. Tuấn">
     </div>
     <button class="primary" id="viewBtn">Xem thời khóa biểu</button>
-    <button class="secondary" onclick="printOnePage()">In 1 trang / Lưu PDF</button>
+    <button class="secondary" onclick="window.print()">In / Lưu PDF</button>
   </div>
 
   <div class="options">
@@ -152,12 +95,12 @@
       Hiện Chủ nhật
     </label>
     <span style="font-size:12px;color:#64748b">
-      Các cột lớp không có tiết của giáo viên sẽ tự động được ẩn.
+      Cột lớp không có tiết của giáo viên sẽ tự động được ẩn.
     </span>
   </div>
 
   <div id="status" class="status"></div>
-  <div id="printArea"><div id="result"></div></div>
+  <div id="result"></div>
   <div class="hint">Google Sheet cần bật quyền “Bất kỳ ai có đường liên kết đều có thể xem”.</div>
 </div>
 
@@ -167,12 +110,8 @@ let lastData = null;
 
 $('viewBtn').addEventListener('click', loadSchedule);
 $('teacher').addEventListener('keydown', e => { if(e.key === 'Enter') loadSchedule(); });
-$('showEvening').addEventListener('change', () => {
-  if(lastData) render(lastData);
-});
-$('showSunday').addEventListener('change', () => {
-  if(lastData) render(lastData);
-});
+$('showEvening').addEventListener('change', () => { if(lastData) render(lastData); });
+$('showSunday').addEventListener('change', () => { if(lastData) render(lastData); });
 
 async function loadSchedule(){
   const url = $('sheetUrl').value.trim();
@@ -205,30 +144,18 @@ function render(data){
   const showEvening = $('showEvening').checked;
   const showSunday = $('showSunday').checked;
 
-  // Lọc theo lựa chọn Buổi tối và Chủ nhật.
   const visibleRows = data.rows.filter(row => {
     const session = String(row.session || '').toLowerCase();
-    const dayRaw = String(row.dayRaw || '').toLowerCase();
     const day = String(row.day || '').toLowerCase();
 
     if(!showEvening && session.includes('tối')) return false;
-
-    const isSunday =
-      day.includes('cn') ||
-      day.includes('chủ nhật') ||
-      dayRaw.split(/\r?\n/)[0].trim() === 'CN' ||
-      dayRaw.includes('chủ nhật');
-
-    if(!showSunday && isSunday) return false;
-
+    if(!showSunday && (day === 'cn' || day.includes('chủ nhật'))) return false;
     return true;
   });
 
-  // Chỉ giữ các cột lớp có ít nhất một kết quả trong các hàng đang hiển thị.
   const activeClassIndexes = [];
   data.classes.forEach((cls, idx) => {
-    const hasMatch = visibleRows.some(row => row.cells[idx]);
-    if(hasMatch) activeClassIndexes.push(idx);
+    if(visibleRows.some(row => row.cells[idx])) activeClassIndexes.push(idx);
   });
 
   const visibleMatchCount = visibleRows.reduce((sum, row) => {
@@ -239,12 +166,12 @@ function render(data){
     `Hiển thị ${visibleMatchCount} tiết của ${data.teacher} • ${activeClassIndexes.length} lớp có lịch`;
 
   if(!visibleMatchCount || !activeClassIndexes.length){
-    $('result').innerHTML =
-      `<div class="empty-message">Không có tiết phù hợp với lựa chọn hiện tại.</div>`;
+    $('result').innerHTML = `<div class="empty-message">Không có tiết phù hợp với lựa chọn hiện tại.</div>`;
     return;
   }
 
   const dayGroups = groupDays(visibleRows);
+
   let h = `<div class="result-title">THỜI KHÓA BIỂU - ${esc(data.teacher)}</div>`;
   h += `<div class="table-box"><table><thead><tr>`;
   h += `<th class="day-h"></th><th class="session-h">Buổi</th><th class="period-h">TIẾT</th>`;
@@ -334,84 +261,6 @@ function esc(v){
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'","&#039;");
 }
-
-function printOnePage(){
-  if(!lastData){
-    $('status').textContent = 'Hãy xem thời khóa biểu trước khi in.';
-    return;
-  }
-
-  // Dùng đúng các tùy chọn đang bật/tắt.
-  render(lastData);
-
-  const area = document.getElementById('printArea');
-  const table = area.querySelector('table');
-  if(!table){
-    $('status').textContent = 'Không có thời khóa biểu để in.';
-    return;
-  }
-
-  // Reset lần in trước.
-  area.style.zoom = '';
-  document.documentElement.style.removeProperty('--print-row-h');
-  document.documentElement.style.removeProperty('--print-head-h');
-  document.documentElement.style.removeProperty('--print-font');
-
-  const bodyRows = table.querySelectorAll('tbody tr').length;
-  const visibleCols = table.querySelectorAll('thead th').length;
-
-  /*
-    Mục tiêu: thẩm mỹ giống PDF mẫu.
-    - Ít dòng: dãn hàng vừa phải.
-    - Nhiều dòng: thu hàng dần, nhưng không ép quá mỏng ngay từ đầu.
-    - Ít cột: cho cột lớp rộng hơn.
-  */
-  let rowH;
-  if(bodyRows <= 36) rowH = 28;
-  else if(bodyRows <= 44) rowH = 24;
-  else if(bodyRows <= 52) rowH = 20;
-  else rowH = 17;
-
-  let fontSize;
-  if(visibleCols <= 7) fontSize = 9.2;
-  else if(visibleCols <= 10) fontSize = 8.4;
-  else fontSize = 7.6;
-
-  const headH = Math.max(30, rowH + 8);
-
-  document.documentElement.style.setProperty('--print-row-h', rowH + 'px');
-  document.documentElement.style.setProperty('--print-head-h', headH + 'px');
-  document.documentElement.style.setProperty('--print-font', fontSize + 'px');
-
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    // Khung 1 trang bảo thủ, nhưng KHÔNG ép loại giấy hay chiều giấy.
-    // Trình duyệt vẫn cho người dùng chọn A4/A3/Portrait/Landscape.
-    const targetW = 760;
-    const targetH = 1010;
-
-    const contentW = Math.max(area.scrollWidth, table.scrollWidth);
-    const contentH = area.scrollHeight;
-
-    let scale = Math.min(targetW / contentW, targetH / contentH, 1);
-
-    // Chỉ thu nhỏ phần cần thiết để giữ 1 trang.
-    // Ưu tiên giữ chữ/hàng lớn hơn so với bản cũ.
-    scale = Math.max(0.34, scale);
-    area.style.zoom = String(scale);
-
-    const cleanup = () => {
-      area.style.zoom = '';
-      document.documentElement.style.removeProperty('--print-row-h');
-      document.documentElement.style.removeProperty('--print-head-h');
-      document.documentElement.style.removeProperty('--print-font');
-      window.removeEventListener('afterprint', cleanup);
-    };
-
-    window.addEventListener('afterprint', cleanup);
-    setTimeout(() => window.print(), 100);
-  }));
-}
-
 </script>
 </body>
 </html>

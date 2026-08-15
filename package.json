@@ -1,6 +1,6 @@
 {
-  "name": "tkb-giao-vien-v2",
-  "version": "2.0.0",
+  "name": "tkb-giao-vien-v3",
+  "version": "3.0.0",
   "private": true,
   "dependencies": {
     "csv-parse": "^5.6.0"
