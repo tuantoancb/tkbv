@@ -18,3 +18,11 @@
 
 Google Sheet phải bật:
 Bất kỳ ai có đường liên kết đều có thể xem.
+
+
+## In 1 trang A4
+- Nút "In 1 trang / Lưu PDF" tự đo kích thước bảng.
+- Tự thu nhỏ theo cả chiều rộng và chiều cao.
+- Khổ in: A4 ngang, lề 4 mm.
+- Tự ẩn toàn bộ phần nhập liệu và tùy chọn khi in.
+- Nên chọn Scale = Default/100% trong hộp thoại in vì app đã tự scale.

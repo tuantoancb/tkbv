@@ -51,13 +51,46 @@
       .page{padding:8px}
     }
     @media print{
-      body{background:#fff}
+      @page{size:A4 landscape;margin:4mm}
+      html,body{width:100%;height:100%;margin:0!important;padding:0!important;background:#fff!important}
+      body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       .controls,.options,.status,.hint,h1{display:none!important}
-      .page{max-width:none;padding:0}
-      .table-box{border:0;overflow:visible}
-      table{font-size:8.5px}
-      th,td{height:27px;padding:1px}
-      .result-title{font-size:14px;margin:2px 0 5px}
+      .page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important}
+      #printArea{
+        display:block!important;
+        width:max-content!important;
+        max-width:none!important;
+        transform-origin:top left!important;
+        page-break-inside:avoid!important;
+        break-inside:avoid!important;
+      }
+      .table-box{
+        border:0!important;
+        overflow:visible!important;
+        width:max-content!important;
+        max-width:none!important;
+      }
+      table{
+        width:auto!important;
+        min-width:0!important;
+        table-layout:fixed!important;
+        font-size:8px!important;
+        page-break-inside:avoid!important;
+        break-inside:avoid!important;
+      }
+      th,td{
+        height:24px!important;
+        min-height:24px!important;
+        padding:1px 2px!important;
+        line-height:1.0!important;
+      }
+      thead th{height:30px!important}
+      .day-h{width:34px!important}
+      .session-h{width:44px!important}
+      .period-h{width:30px!important}
+      .class-h{width:62px!important}
+      .result-title{font-size:13px!important;margin:0 0 3px!important}
+      tr,td,th{page-break-inside:avoid!important;break-inside:avoid!important}
     }
   </style>
 </head>
@@ -75,7 +108,7 @@
       <input type="text" id="teacher" placeholder="Ví dụ: T.Tuấn hoặc Long">
     </div>
     <button class="primary" id="viewBtn">Xem thời khóa biểu</button>
-    <button class="secondary" onclick="window.print()">In / Lưu PDF</button>
+    <button class="secondary" onclick="printOnePage()">In 1 trang / Lưu PDF</button>
   </div>
 
   <div class="options">
@@ -89,7 +122,7 @@
   </div>
 
   <div id="status" class="status"></div>
-  <div id="result"></div>
+  <div id="printArea"><div id="result"></div></div>
   <div class="hint">Google Sheet cần bật quyền “Bất kỳ ai có đường liên kết đều có thể xem”.</div>
 </div>
 
@@ -249,6 +282,55 @@ function esc(v){
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'","&#039;");
 }
+
+function printOnePage(){
+  if(!lastData){
+    $('status').textContent = 'Hãy xem thời khóa biểu trước khi in.';
+    return;
+  }
+
+  // Re-render theo lựa chọn hiện tại trước khi đo kích thước.
+  render(lastData);
+
+  const area = document.getElementById('printArea');
+  const table = area.querySelector('table');
+  if(!table){
+    $('status').textContent = 'Không có thời khóa biểu để in.';
+    return;
+  }
+
+  // Bỏ scale cũ để đo kích thước thật.
+  area.style.transform = '';
+  area.style.zoom = '';
+  area.style.width = '';
+
+  // A4 ngang ở 96dpi ~ 1123 x 794 px.
+  // Trừ lề 4mm mỗi cạnh và chừa chút an toàn cho trình duyệt/printer.
+  const targetW = 1060;
+  const targetH = 730;
+
+  // Dùng kích thước nội dung hiện tại; title + table đều nằm trong printArea.
+  const contentW = Math.max(area.scrollWidth, table.scrollWidth);
+  const contentH = area.scrollHeight;
+
+  let scale = Math.min(targetW / contentW, targetH / contentH, 1);
+  // Giới hạn nhỏ nhất để chữ không quá bé; nếu rất dài vẫn ưu tiên 1 trang.
+  scale = Math.max(scale, 0.42);
+
+  // Chromium/Vercel users thường in bằng Chrome; zoom hoạt động ổn định hơn transform khi print.
+  area.style.zoom = String(scale);
+
+  const cleanup = () => {
+    area.style.zoom = '';
+    area.style.transform = '';
+    area.style.width = '';
+    window.removeEventListener('afterprint', cleanup);
+  };
+
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(() => window.print(), 80);
+}
+
 </script>
 </body>
 </html>
