@@ -47,15 +47,15 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Sheet không có dữ liệu." });
     }
 
+    // A = Thứ/ngày, B = Buổi, C = Tiết, D:R = 10A1 ... 12A5
     const header = values[0] || [];
     const classStart = 3;
     const maxClassColumns = 15;
-
     const classes = header
       .slice(classStart, classStart + maxClassColumns)
       .map(cleanClassHeader);
 
-    const teacherKey = normalizeTeacher(teacherInput);
+    const teacherKey = normalize(teacherInput);
 
     let currentDay = "";
     let currentSession = "";
@@ -78,8 +78,7 @@ module.exports = async function handler(req, res) {
         const parsed = splitSubjectTeacher(raw);
 
         if (parsed && teacherMatches(parsed.teacher, teacherKey)) {
-          // Hiển thị trên một dòng đúng kiểu "Toán - T.Tuấn"
-          cells.push(`${parsed.subject} - ${parsed.teacher}`);
+          cells.push(`${parsed.subject}\n- ${parsed.teacher}`);
           matchCount++;
         } else {
           cells.push("");
@@ -110,17 +109,16 @@ module.exports = async function handler(req, res) {
   }
 };
 
-function normalizeTeacher(text) {
+function normalize(text) {
   return String(text || "")
     .normalize("NFC")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/\s*\.\s*/g, "."); // T. Tuấn == T.Tuấn
+    .replace(/\s+/g, " ");
 }
 
 function teacherMatches(actualTeacher, teacherKey) {
-  const actual = normalizeTeacher(actualTeacher);
+  const actual = normalize(actualTeacher);
   if (actual === teacherKey) return true;
 
   return actual.endsWith(teacherKey) &&
@@ -141,14 +139,21 @@ function splitSubjectTeacher(text) {
   return { subject, teacher };
 }
 
+
+function formatTeacher(text) {
+  // Chỉ chỉnh phần HIỂN THỊ: T.Tuấn -> T. Tuấn, N.Ngọc -> N. Ngọc.
+  // Không ảnh hưởng logic tìm kiếm.
+  return String(text || "")
+    .trim()
+    .replace(/([A-Za-zÀ-ỹĐđ])\.(?=\S)/g, "$1. ");
+}
+
 function cleanClassHeader(text) {
   return String(text || "").split(/\r?\n/)[0].trim();
 }
 
 function parseDay(text) {
   const first = String(text || "").split(/\r?\n/)[0].trim();
-  if (/^cn$/i.test(first) || /chủ\s*nhật/i.test(first)) return "CN";
-
   const m = first.match(/[2-7]/);
   return m ? m[0] : first;
 }
