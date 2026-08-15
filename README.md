@@ -85,3 +85,12 @@ Bất kỳ ai có đường liên kết đều có thể xem.
 - Có lựa chọn Kiểu in: Tự động / Dọc / Ngang.
 - Tự động ưu tiên Dọc khi ít cột, Ngang khi nhiều cột.
 - Giữ toàn bộ tính năng danh sách giáo viên, ẩn cột trống, Chiều/Tối/Chủ nhật.
+
+
+## V12 - Xuất ảnh PNG
+- Thêm nút `Xuất ảnh PNG`.
+- Chụp riêng phần thời khóa biểu đang hiển thị, không chụp các ô nhập/nút.
+- Giữ font Times New Roman, màu nền, tiêu đề và bảng.
+- Xuất PNG độ phân giải cao (scale 2x).
+- Tên file tự động theo giáo viên, ví dụ `Thoi_khoa_bieu_T._Tuan.png`.
+- Ảnh dùng đúng các tùy chọn hiện tại: ẩn/hiện Chiều, Tối, Chủ nhật và các cột lớp tự ẩn.

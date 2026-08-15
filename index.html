@@ -11,7 +11,7 @@
     h1{text-align:center;font-size:24px;margin:4px 0 14px}
     .controls{
       background:#fff;border:1px solid #d1d5db;border-radius:12px;
-      padding:12px;display:grid;grid-template-columns:1fr 220px auto auto;
+      padding:12px;display:grid;grid-template-columns:1fr 220px auto auto auto;
       gap:10px;align-items:end;margin-bottom:10px
     }
     label{font-size:12px;font-weight:700;display:block;margin-bottom:5px}
@@ -46,6 +46,43 @@
       background:#fff;border:1px solid #d1d5db;border-radius:10px;
       padding:22px;text-align:center;color:#64748b;font-weight:700
     }
+
+    .exporting{
+      background:#fff!important;
+      padding:18px!important;
+      width:max-content!important;
+    }
+    .exporting .result-title{
+      font-size:24px!important;
+      margin:0 0 14px!important;
+      font-weight:700!important;
+      font-family:'Times New Roman',Times,serif!important;
+    }
+    .exporting table{
+      font-family:'Times New Roman',Times,serif!important;
+      font-size:13px!important;
+      min-width:0!important;
+      width:auto!important;
+    }
+    .exporting th,.exporting td{
+      height:38px!important;
+      padding:3px 7px!important;
+      border:1px solid #666!important;
+      line-height:1.08!important;
+    }
+    .exporting thead th{
+      height:46px!important;
+      background:#f1f1f1!important;
+    }
+    .exporting .day-h{width:52px!important}
+    .exporting .session-h{width:68px!important}
+    .exporting .period-h{width:48px!important}
+    .exporting .class-h{width:118px!important}
+    .exporting .teacher-cell{
+      white-space:nowrap!important;
+      font-weight:600!important;
+    }
+
     @media(max-width:850px){
       .controls{grid-template-columns:1fr}
       .page{padding:8px}
@@ -90,6 +127,7 @@
       tr,td,th{page-break-inside:avoid!important;break-inside:avoid!important}
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="page">
@@ -108,6 +146,7 @@
     </div>
     <button class="primary" id="viewBtn">Xem thời khóa biểu</button>
     <button class="secondary" onclick="printOnePage()">In thời khóa biểu</button>
+    <button class="secondary" id="pngBtn" onclick="exportPNG()">Xuất ảnh PNG</button>
   </div>
 
   <div class="options">
@@ -358,6 +397,85 @@ function esc(v){
   return String(v ?? '')
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'","&#039;");
+}
+
+
+async function exportPNG(){
+  if(!lastData){
+    $('status').textContent='Hãy xem thời khóa biểu trước khi xuất ảnh.';
+    return;
+  }
+
+  render(lastData);
+
+  const area=document.getElementById('printArea');
+  const result=area.querySelector('#result');
+  if(!result || !result.querySelector('table')){
+    $('status').textContent='Không có thời khóa biểu để xuất ảnh.';
+    return;
+  }
+
+  const btn=$('pngBtn');
+  btn.disabled=true;
+  $('status').textContent='Đang tạo ảnh PNG...';
+
+  // Tạo bản sao riêng để xuất ảnh, không làm thay đổi giao diện người dùng.
+  const clone=area.cloneNode(true);
+  clone.id='exportClone';
+  clone.classList.add('exporting');
+
+  Object.assign(clone.style,{
+    position:'fixed',
+    left:'-100000px',
+    top:'0',
+    zoom:'1',
+    transform:'none',
+    width:'max-content',
+    maxWidth:'none',
+    background:'#fff',
+    zIndex:'-1'
+  });
+
+  document.body.appendChild(clone);
+
+  try{
+    if(typeof html2canvas!=='function'){
+      throw new Error('Thư viện xuất ảnh chưa tải được. Hãy tải lại trang và thử lại.');
+    }
+
+    // Chờ font/layout ổn định.
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const canvas=await html2canvas(clone,{
+      backgroundColor:'#ffffff',
+      scale:2,
+      useCORS:true,
+      logging:false,
+      width:clone.scrollWidth,
+      height:clone.scrollHeight,
+      windowWidth:clone.scrollWidth,
+      windowHeight:clone.scrollHeight
+    });
+
+    const teacher=(lastData.teacher || 'giao-vien')
+      .replace(/[\\/:*?"<>|]+/g,'-')
+      .replace(/\s+/g,'_');
+
+    const link=document.createElement('a');
+    link.download=`Thoi_khoa_bieu_${teacher}.png`;
+    link.href=canvas.toDataURL('image/png',1.0);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    $('status').textContent=`Đã xuất ảnh thời khóa biểu của ${lastData.teacher}.`;
+  }catch(e){
+    $('status').textContent='Lỗi xuất ảnh: '+e.message;
+  }finally{
+    clone.remove();
+    btn.disabled=false;
+  }
 }
 
 function printOnePage(){
