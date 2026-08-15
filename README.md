@@ -1,21 +1,20 @@
-# TKB Giáo viên
+# TKB Giáo viên V2
 
-App lọc thời khóa biểu theo tên giáo viên và giữ đúng bố cục:
-
-Thứ/ngày | Buổi | TIẾT | 10A1 ... 12A5
-
-Chỉ các ô của giáo viên được nhập mới hiển thị nội dung.
-Các ô khác để trống.
+## Tính năng mới
+- Tự động ẩn mọi cột lớp không có tiết của giáo viên đang tìm.
+- Có tùy chọn "Hiện buổi tối".
+- Khi bật/tắt buổi tối, các cột lớp được tính lại ngay mà không cần tải lại Google Sheets.
+- Giữ nguyên Thứ/ngày, Buổi, Tiết và chỉ hiện các lớp thực sự có lịch.
+- Có In / Lưu PDF.
 
 ## Deploy Vercel
 1. Giải nén ZIP.
-2. Upload TẤT CẢ file bên trong lên root GitHub repository.
+2. Upload toàn bộ file bên trong lên root GitHub repository.
 3. Import repository vào Vercel.
 4. Framework Preset: Other.
 5. Build Command: để trống.
 6. Output Directory: để trống.
 7. Deploy.
 
-## Quyền Google Sheets
-Sheet phải bật:
-Bất kỳ ai có đường liên kết đều có thể xem / Anyone with the link can view.
+Google Sheet phải bật:
+Bất kỳ ai có đường liên kết đều có thể xem.

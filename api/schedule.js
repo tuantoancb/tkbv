@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
     // A = Thứ/ngày, B = Buổi, C = Tiết, D:R = 10A1 ... 12A5
     const header = values[0] || [];
     const classStart = 3;
-    const maxClassColumns = 15; // 10A1..10A5, 11A1..11A5, 12A1..12A5
+    const maxClassColumns = 15;
     const classes = header
       .slice(classStart, classStart + maxClassColumns)
       .map(cleanClassHeader);
@@ -96,6 +96,7 @@ module.exports = async function handler(req, res) {
     }
 
     res.setHeader("Cache-Control", "s-maxage=20, stale-while-revalidate=40");
+
     return res.status(200).json({
       teacher: teacherInput,
       classes,
@@ -120,8 +121,6 @@ function teacherMatches(actualTeacher, teacherKey) {
   const actual = normalize(actualTeacher);
   if (actual === teacherKey) return true;
 
-  // Cho phép nhập tên ngắn như "Long" khi ô là "Long",
-  // nhưng không tìm tràn sang phần môn học.
   return actual.endsWith(teacherKey) &&
     (actual.length === teacherKey.length ||
      /[\s.\-]/.test(actual.charAt(actual.length - teacherKey.length - 1)));
@@ -130,7 +129,6 @@ function teacherMatches(actualTeacher, teacherKey) {
 function splitSubjectTeacher(text) {
   if (!text) return null;
 
-  // Chấp nhận "Toán - T.Tuấn" và các biến thể khoảng trắng.
   const m = String(text).match(/^(.*?)\s*-\s*([^-]+?)\s*$/);
   if (!m) return null;
 
@@ -142,7 +140,6 @@ function splitSubjectTeacher(text) {
 }
 
 function cleanClassHeader(text) {
-  // Header có thể là "10A1\n(Hà)" -> chỉ lấy "10A1"
   return String(text || "").split(/\r?\n/)[0].trim();
 }
 
@@ -157,5 +154,6 @@ function parseDate(text) {
     .split(/\r?\n/)
     .map(s => s.trim())
     .filter(Boolean);
+
   return lines.length > 1 ? lines.slice(1).join(" ") : "";
 }
