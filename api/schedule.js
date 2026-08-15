@@ -139,6 +139,15 @@ function splitSubjectTeacher(text) {
   return { subject, teacher };
 }
 
+
+function formatTeacher(text) {
+  // Chỉ chỉnh phần HIỂN THỊ: T.Tuấn -> T. Tuấn, N.Ngọc -> N. Ngọc.
+  // Không ảnh hưởng logic tìm kiếm.
+  return String(text || "")
+    .trim()
+    .replace(/([A-Za-zÀ-ỹĐđ])\.(?=\S)/g, "$1. ");
+}
+
 function cleanClassHeader(text) {
   return String(text || "").split(/\r?\n/)[0].trim();
 }

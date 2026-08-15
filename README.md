@@ -32,3 +32,22 @@ Bất kỳ ai có đường liên kết đều có thể xem.
 - In A4 theo chiều dọc (Portrait).
 - Nội dung ô hiển thị dạng một dòng: `Toán - T. Tuấn`.
 - Vẫn tự thu nhỏ để ưu tiên nằm trên 1 trang.
+
+
+## V5 - In chắc chắn 1 trang A4 dọc
+- Tự đếm số hàng thực tế trước khi in.
+- Co/dãn chiều cao từng hàng dựa theo số hàng.
+- Sau đó mới scale toàn bảng để khớp cả chiều rộng và chiều cao A4.
+- Không còn giới hạn scale cũ gây tràn sang trang 2.
+- Ô lịch hiển thị một dòng, ví dụ: `Toán - T. Tuấn`.
+- Khi in từ Chrome, nên tắt Headers and footers để có thêm diện tích.
+
+
+## V6
+- Thêm checkbox `Hiện Chủ nhật`.
+- Bỏ chọn để loại toàn bộ Chủ nhật khỏi bảng và khỏi bản in.
+- Các cột lớp sẽ tự tính lại sau khi ẩn Chủ nhật.
+
+
+## V7
+- Toàn bộ giao diện và bản in dùng font Times New Roman.

@@ -6,7 +6,7 @@
   <title>Thời khóa biểu giáo viên</title>
   <style>
     *{box-sizing:border-box}
-    body{margin:0;background:#f5f6f8;font-family:Arial,Helvetica,sans-serif;color:#111827}
+    body{margin:0;background:#f5f6f8;font-family:'Times New Roman',Times,serif;color:#111827}
     .page{max-width:1800px;margin:auto;padding:16px}
     h1{text-align:center;font-size:24px;margin:4px 0 14px}
     .controls{
@@ -39,7 +39,7 @@
     .morning{background:#08e91d;font-weight:800}
     .afternoon{background:#fff0ae;font-weight:800}
     .evening{background:#a9a9a9;font-weight:800}
-    .teacher-cell{font-weight:700;white-space:normal;line-height:1.05}
+    .teacher-cell{font-weight:700;white-space:nowrap;line-height:1.0;overflow:hidden;text-overflow:clip}
     .blank{color:transparent}
     .hint{font-size:12px;color:#64748b;text-align:center;margin-top:7px}
     .empty-message{
@@ -74,17 +74,17 @@
         width:auto!important;
         min-width:0!important;
         table-layout:fixed!important;
-        font-size:6.8px!important;
+        font-size:var(--print-font,6.4px)!important;
         page-break-inside:avoid!important;
         break-inside:avoid!important;
       }
       th,td{
-        height:21px!important;
-        min-height:21px!important;
+        height:var(--print-row-h,18px)!important;
+        min-height:var(--print-row-h,18px)!important;
         padding:1px 2px!important;
         line-height:1.0!important;
       }
-      thead th{height:27px!important}
+      thead th{height:var(--print-head-h,24px)!important}
       .day-h{width:34px!important}
       .session-h{width:44px!important}
       .period-h{width:30px!important}
@@ -116,6 +116,10 @@
       <input type="checkbox" id="showEvening" checked>
       Hiện buổi tối
     </label>
+    <label class="check">
+      <input type="checkbox" id="showSunday" checked>
+      Hiện Chủ nhật
+    </label>
     <span style="font-size:12px;color:#64748b">
       Các cột lớp không có tiết của giáo viên sẽ tự động được ẩn.
     </span>
@@ -133,6 +137,9 @@ let lastData = null;
 $('viewBtn').addEventListener('click', loadSchedule);
 $('teacher').addEventListener('keydown', e => { if(e.key === 'Enter') loadSchedule(); });
 $('showEvening').addEventListener('change', () => {
+  if(lastData) render(lastData);
+});
+$('showSunday').addEventListener('change', () => {
   if(lastData) render(lastData);
 });
 
@@ -165,11 +172,25 @@ async function loadSchedule(){
 
 function render(data){
   const showEvening = $('showEvening').checked;
+  const showSunday = $('showSunday').checked;
 
-  // Chỉ giữ các hàng được phép hiển thị theo lựa chọn buổi tối.
+  // Lọc theo lựa chọn Buổi tối và Chủ nhật.
   const visibleRows = data.rows.filter(row => {
-    if(showEvening) return true;
-    return !String(row.session || '').toLowerCase().includes('tối');
+    const session = String(row.session || '').toLowerCase();
+    const dayRaw = String(row.dayRaw || '').toLowerCase();
+    const day = String(row.day || '').toLowerCase();
+
+    if(!showEvening && session.includes('tối')) return false;
+
+    const isSunday =
+      day.includes('cn') ||
+      day.includes('chủ nhật') ||
+      dayRaw.split(/\r?\n/)[0].trim() === 'CN' ||
+      dayRaw.includes('chủ nhật');
+
+    if(!showSunday && isSunday) return false;
+
+    return true;
   });
 
   // Chỉ giữ các cột lớp có ít nhất một kết quả trong các hàng đang hiển thị.
@@ -289,7 +310,6 @@ function printOnePage(){
     return;
   }
 
-  // Re-render theo lựa chọn hiện tại trước khi đo kích thước.
   render(lastData);
 
   const area = document.getElementById('printArea');
@@ -299,36 +319,62 @@ function printOnePage(){
     return;
   }
 
-  // Bỏ scale cũ để đo kích thước thật.
-  area.style.transform = '';
+  // Reset mọi thông số từ lần in trước.
   area.style.zoom = '';
+  area.style.transform = '';
   area.style.width = '';
+  document.documentElement.style.removeProperty('--print-row-h');
+  document.documentElement.style.removeProperty('--print-head-h');
+  document.documentElement.style.removeProperty('--print-font');
 
-  // A4 ngang ở 96dpi ~ 1123 x 794 px.
-  // Trừ lề 4mm mỗi cạnh và chừa chút an toàn cho trình duyệt/printer.
-  const targetW = 740;
-  const targetH = 1060;
+  // A4 dọc ở 96dpi khoảng 794 x 1123 px.
+  // Chừa vùng an toàn cho lề và header/footer của trình duyệt.
+  const targetW = 720;
+  const targetH = 990;
 
-  // Dùng kích thước nội dung hiện tại; title + table đều nằm trong printArea.
-  const contentW = Math.max(area.scrollWidth, table.scrollWidth);
-  const contentH = area.scrollHeight;
+  const bodyRows = table.querySelectorAll('tbody tr').length;
 
-  let scale = Math.min(targetW / contentW, targetH / contentH, 1);
-  // Giới hạn nhỏ nhất để chữ không quá bé; nếu rất dài vẫn ưu tiên 1 trang.
-  scale = Math.max(scale, 0.42);
+  // Co/dãn CHIỀU CAO dòng theo số hàng thực tế.
+  // Càng nhiều hàng thì mỗi hàng càng thấp; ít hàng thì được dãn ra đẹp hơn.
+  const titleReserve = 26;
+  const headReserve = 26;
+  const usableForRows = targetH - titleReserve - headReserve - 18;
+  let rowH = usableForRows / Math.max(bodyRows, 1);
+  rowH = Math.max(9.5, Math.min(19, rowH));
 
-  // Chromium/Vercel users thường in bằng Chrome; zoom hoạt động ổn định hơn transform khi print.
-  area.style.zoom = String(scale);
+  const headH = Math.max(22, Math.min(28, rowH + 6));
+  let fontSize = Math.max(5.2, Math.min(7.2, rowH * 0.34));
 
-  const cleanup = () => {
-    area.style.zoom = '';
-    area.style.transform = '';
-    area.style.width = '';
-    window.removeEventListener('afterprint', cleanup);
-  };
+  document.documentElement.style.setProperty('--print-row-h', rowH + 'px');
+  document.documentElement.style.setProperty('--print-head-h', headH + 'px');
+  document.documentElement.style.setProperty('--print-font', fontSize + 'px');
 
-  window.addEventListener('afterprint', cleanup);
-  setTimeout(() => window.print(), 80);
+  // Đợi trình duyệt áp CSS mới rồi mới đo.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const contentW = Math.max(area.scrollWidth, table.scrollWidth);
+      const contentH = area.scrollHeight;
+
+      // Scale phần còn thiếu sau khi đã co/dãn row.
+      // Không đặt min-scale để tránh trường hợp bị văng sang trang 2.
+      let scale = Math.min(targetW / contentW, targetH / contentH, 1);
+      scale = Math.max(0.26, scale);
+      area.style.zoom = String(scale);
+
+      const cleanup = () => {
+        area.style.zoom = '';
+        area.style.transform = '';
+        area.style.width = '';
+        document.documentElement.style.removeProperty('--print-row-h');
+        document.documentElement.style.removeProperty('--print-head-h');
+        document.documentElement.style.removeProperty('--print-font');
+        window.removeEventListener('afterprint', cleanup);
+      };
+
+      window.addEventListener('afterprint', cleanup);
+      setTimeout(() => window.print(), 100);
+    });
+  });
 }
 
 </script>
