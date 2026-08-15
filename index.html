@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Thời khóa biểu cá nhân</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#111827}
+    .wrap{max-width:1700px;margin:auto;padding:18px}
+    h1{text-align:center;margin:0 0 16px;font-size:25px}
+    .toolbar{display:grid;grid-template-columns:1fr 220px auto auto;gap:10px;background:#fff;border:1px solid #d1d5db;border-radius:12px;padding:12px;margin-bottom:14px;align-items:end}
+    label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}
+    input{width:100%;height:40px;padding:0 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+    button{height:40px;border:0;border-radius:8px;padding:0 15px;font-weight:700;cursor:pointer}
+    .primary{background:#2563eb;color:#fff}.secondary{background:#e5e7eb}
+    .status{text-align:center;min-height:22px;color:#475569;margin-bottom:8px}
+    .title{text-align:center;font-size:22px;font-weight:800;margin:12px 0}
+    .table-wrap{overflow:auto;background:#fff;border:1px solid #6b7280}
+    table{border-collapse:collapse;min-width:1350px;width:100%;table-layout:fixed;font-size:12px}
+    th,td{border:1px solid #707070;text-align:center;vertical-align:middle;padding:4px 3px;height:35px;white-space:pre-line}
+    thead th{background:#f3f4f6;font-weight:800;height:48px}
+    .daycol{width:38px}.sessioncol{width:45px}.periodcol{width:32px}.classcol{min-width:75px}
+    .day-cell{background:#ffff00;font-weight:800;font-size:13px}
+    .session-morning{background:#00ef16;font-weight:800}
+    .session-afternoon{background:#f8edb2;font-weight:800}
+    .session-evening{background:#a9a9a9;font-weight:800}
+    .match{font-weight:700;line-height:1.18}
+    .empty{color:transparent}
+    @media(max-width:800px){.toolbar{grid-template-columns:1fr}.wrap{padding:8px}}
+    @media print{body{background:#fff}.toolbar,.status{display:none!important}.wrap{max-width:none;padding:0}.table-wrap{border:0;overflow:visible}table{min-width:0;font-size:9px}th,td{padding:2px 1px;height:28px}.title{font-size:16px;margin:4px 0 8px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>THỜI KHÓA BIỂU CÁ NHÂN</h1>
+  <div class="toolbar">
+    <div>
+      <label>Link Google Sheets</label>
+      <input id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=..." />
+    </div>
+    <div>
+      <label>Tên giáo viên</label>
+      <input id="teacherName" placeholder="Ví dụ: T.Tuấn" />
+    </div>
+    <button class="primary" id="loadBtn">Xem thời khóa biểu</button>
+    <button class="secondary" onclick="window.print()">In / Lưu PDF</button>
+  </div>
+  <div id="status" class="status"></div>
+  <div id="result"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+$('loadBtn').addEventListener('click', loadGrid);
+$('teacherName').addEventListener('keydown', e => { if (e.key === 'Enter') loadGrid(); });
+
+async function loadGrid(){
+  const sheetUrl=$('sheetUrl').value.trim();
+  const teacher=$('teacherName').value.trim();
+  if(!sheetUrl||!teacher){$('status').textContent='Vui lòng nhập link Google Sheets và tên giáo viên.';return}
+  $('status').textContent='Đang đọc dữ liệu...'; $('result').innerHTML='';
+  try{
+    const res=await fetch('/api/sheet?url='+encodeURIComponent(sheetUrl)+'&teacher='+encodeURIComponent(teacher));
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Không đọc được Google Sheets.');
+    renderGrid(data);
+  }catch(err){$('status').textContent='Lỗi: '+err.message}
+}
+
+function renderGrid(data){
+  $('status').textContent=`Tìm thấy ${data.matchCount} tiết của ${data.teacher}`;
+  if(!data.matchCount){$('result').innerHTML='';return}
+  const groups=buildGroups(data.rows);
+  let html=`<div class="title">THỜI KHÓA BIỂU - ${esc(data.teacher)}</div>`;
+  html+=`<div class="table-wrap"><table><thead><tr><th class="daycol"></th><th class="sessioncol">Buổi</th><th class="periodcol">TIẾT</th>`;
+  data.classes.forEach(c=>html+=`<th class="classcol">${esc(c)}</th>`);
+  html+=`</tr></thead><tbody>`;
+  groups.forEach(dayGroup=>{
+    let firstDay=true;
+    const dayCount=dayGroup.rows.length;
+    dayGroup.sessions.forEach(sessionGroup=>{
+      let firstSession=true;
+      const sessionCount=sessionGroup.rows.length;
+      sessionGroup.rows.forEach(row=>{
+        html+='<tr>';
+        if(firstDay){html+=`<td class="day-cell" rowspan="${dayCount}"><div>${esc(dayGroup.day)}</div><div>${esc(dayGroup.date)}</div></td>`;firstDay=false}
+        if(firstSession){html+=`<td class="${sessionClass(sessionGroup.name)}" rowspan="${sessionCount}">${esc(sessionGroup.name)}</td>`;firstSession=false}
+        html+=`<td>${esc(row.period)}</td>`;
+        row.cells.forEach(cell=>html+=cell?`<td class="match">${esc(cell)}</td>`:`<td class="empty">&nbsp;</td>`);
+        html+='</tr>';
+      });
+    });
+  });
+  html+='</tbody></table></div>';
+  $('result').innerHTML=html;
+}
+function buildGroups(rows){
+  const groups=[]; let key=null,day=null,session=null;
+  rows.forEach(row=>{
+    const k=row.dayRaw||`${row.day}|${row.date}`;
+    if(k!==key){key=k;day={day:row.day,date:row.date,rows:[],sessions:[]};groups.push(day);session=null}
+    day.rows.push(row);
+    if(!session||session.name!==row.session){session={name:row.session,rows:[]};day.sessions.push(session)}
+    session.rows.push(row);
+  });
+  return groups;
+}
+function sessionClass(name){
+  const n=String(name||'').toLowerCase();
+  if(n.includes('sáng'))return'session-morning';
+  if(n.includes('chiều'))return'session-afternoon';
+  if(n.includes('tối'))return'session-evening';
+  return'';
+}
+function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
+</script>
+</body>
+</html>
